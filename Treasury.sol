@@ -1,12 +1,17 @@
 // SPDX-License-Identifier: MIT
 pragma solidity ^0.8.20;
 
+/**
+ * @title RiseTreasury
+ * @dev Manages protocol funds and community-led grants for the RISE Protocol.
+ */
 contract RiseTreasury {
     address public governor;
     uint256 public totalFunds;
 
     event Deposit(address indexed from, uint256 amount);
     event ProposalExecuted(address indexed to, uint256 amount, string reason);
+    event GovernanceTransferred(address indexed previousGovernor, address indexed newGovernor);
 
     modifier onlyGovernor() {
         require(msg.sender == governor, "RISE: Only Governor can execute");
@@ -14,7 +19,7 @@ contract RiseTreasury {
     }
 
     constructor() {
-        governor = msg.sender; // Initially, the creator is the Governor
+        governor = msg.sender; // The deployer starts as the Governor
     }
 
     // Accept funds from the $RYZE tax or donations
@@ -23,7 +28,7 @@ contract RiseTreasury {
         emit Deposit(msg.sender, msg.value);
     }
 
-    // The community "Votes" and then the Governor calls this to pay out a grant
+    // Executing a community grant (e.g., Marketing, Development, Rewards)
     function executeGrant(address payable _to, uint256 _amount, string memory _reason) 
         external 
         onlyGovernor 
@@ -36,8 +41,10 @@ contract RiseTreasury {
         emit ProposalExecuted(_to, _amount, _reason);
     }
 
-    // Change who the Governor is (e.g., move control to a DAO contract later)
-    fn transferGovernance(address _newGovernor) external onlyGovernor {
+    // Change who the Governor is (e.g., passing control to a DAO contract)
+    function transferGovernance(address _newGovernor) external onlyGovernor {
+        require(_newGovernor != address(0), "RISE: New governor is the zero address");
+        emit GovernanceTransferred(governor, _newGovernor);
         governor = _newGovernor;
     }
 
