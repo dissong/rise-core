@@ -1,0 +1,1 @@
+/data/data/com.termux/files/home/rise-protocol/rise-core/target/release/rise-core: /data/data/com.termux/files/home/rise-protocol/rise-core/src/main.rs /data/data/com.termux/files/home/rise-protocol/rise-core/src/validator.rs
