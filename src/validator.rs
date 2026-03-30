@@ -1,16 +1,17 @@
 // src/validator.rs
 
-#[derive(Debug, Clone)]
-pub enum SlashReason {
-    DoubleSigning,    // Malicious: Signing two different hashes for one block
-    Downtime,         // Negligent: Offline for too long
-    InvalidProposal,  // Medium: Submitting corrupt data
+#[derive(Debug, Clone, PartialEq)]
+pub enum ValidatorStatus {
+    Active,
+    Unbonding(u32), // Block height when funds become withdrawable
+    Inactive,
+    Jailed,
 }
 
 pub struct ValidatorStats {
     pub address: String,
+    pub status: ValidatorStatus,
     pub missed_blocks: u32,
-    pub is_active: bool,
     pub total_staked: u64,
 }
 
@@ -18,27 +19,27 @@ impl ValidatorStats {
     pub fn new(addr: &str, stake: u64) -> Self {
         Self {
             address: addr.to_string(),
+            status: ValidatorStatus::Active,
             missed_blocks: 0,
-            is_active: true,
             total_staked: stake,
         }
     }
 
-    // NEW: Logic to detect if a validator is trying to fork the chain
-    pub fn verify_signature(&mut self, _height: u32, block_hash: &str, last_hash: &mut String) -> Option<SlashReason> {
-        if !last_hash.is_empty() && block_hash != *last_hash {
-            self.is_active = false;
-            return Some(SlashReason::DoubleSigning);
+    // Start the exit process (Escrow Handshake)
+    pub fn start_unbonding(&mut self, current_block: u32) {
+        if self.status == ValidatorStatus::Active {
+            let release_at = current_block + 50; // 50 block security delay
+            self.status = ValidatorStatus::Unbonding(release_at);
+            println!("🔒 Validator {} entered Escrow. Release at block {}", self.address, release_at);
         }
-        *last_hash = block_hash.to_string();
-        None
     }
 
-    pub fn check_slashing(&mut self) -> Option<SlashReason> {
-        if self.missed_blocks > 100 {
-            self.is_active = false;
-            return Some(SlashReason::Downtime);
+    pub fn check_escrow_release(&mut self, current_block: u32) {
+        if let ValidatorStatus::Unbonding(release_height) = self.status {
+            if current_block >= release_height {
+                self.status = ValidatorStatus::Inactive;
+                println!("🔓 Escrow period ended for {}. Funds are now withdrawable.", self.address);
+            }
         }
-        None
     }
 }
