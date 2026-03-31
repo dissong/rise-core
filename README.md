@@ -11,6 +11,7 @@ RISE is a high-performance, decentralized ecosystem built using Rust and Solidit
 ## 🛡️ Security Features
 *   **Guardian Validator:** Prevents malicious negative-amount transfers and blacklisted address activity at the node level.
 *   **Governance-Locked Treasury:** Funds can only be moved via explicit instructions from the Protocol Governor.
-
+*  **ESCROW**
+  
 ## 🛠️ Development Setup
 The protocol is designed to be managed and compiled within a mobile-first environment (Termux), demonstrating the portability of modern Web3 development.
